@@ -1,48 +1,110 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FNF Hub — Legendary Launcher</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FNF Hub</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<!-- Background particles + neon gradients -->
+<canvas id="bg-canvas" class="bg-canvas"></canvas>
 
-<div id="bg-animation"></div>
-
-<header>
-  <img id="logo" src="assets/logo.png" alt="FNF Hub Logo">
-  <div class="header-text">
-    <h1>FNF Hub</h1>
-    <p>All your Friday Night Funkin' web apps in one legendary launcher</p>
+<header class="topbar">
+  <div class="brand" id="logoWrap" title="Click me a lot for secrets">
+    <img id="logo" src="assets/logo.png" alt="FNF Hub logo">
+    <div class="brand-text">
+      <h1>FNF Hub</h1>
+      <p>All your Friday Night Funkin' web apps</p>
+    </div>
   </div>
-  <div class="header-actions">
-    <button id="achievements-btn">Achievements</button>
-    <a href="https://github.com/bg4mer" target="_blank" id="github-btn">GitHub</a>
+
+  <div class="top-actions">
+    <div class="exp-compact">
+      <div class="lvl">Lvl <span id="level">1</span></div>
+      <div class="exp-bar-compact">
+        <div id="expFill" class="exp-fill"></div>
+      </div>
+      <div class="exp-count" id="expCount">0 XP</div>
+    </div>
+
+    <button class="btn ghost" id="achBtn">Achievements</button>
+    <button class="btn ghost" id="toggleGridBtn">Grid Effects</button>
+    <a class="btn ghost" id="githubBtn" href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
   </div>
 </header>
 
-<section class="exp-bar-section">
-  <div>Level: <span id="level">1</span></div>
-  <div class="exp-bar">
-    <div id="exp-fill"></div>
+<main class="main">
+  <section class="intro">
+    <div class="hero">
+      <h2>Play FNF mods anywhere</h2>
+      <p class="muted">Click Open to launch the web app in a new tab. Use Try (iframe) to attempt running inside school networks.</p>
+    </div>
+  </section>
+
+  <section id="controls" class="controls">
+    <input id="search" placeholder="Search apps..." />
+    <label class="switch">
+      <input id="schoolToggle" type="checkbox">
+      <span class="slider"></span>
+      <span class="switch-label">School Mode (try iframe)</span>
+    </label>
+  </section>
+
+  <section id="grid" class="grid"></section>
+
+  <section class="extras">
+    <div class="card">
+      <h3>Secrets & Easter Eggs</h3>
+      <ul>
+        <li>Click logo 7 times → Legendary Mode</li>
+        <li>Type Konami (↑↑↓↓←→←→BA) → Konami Master</li>
+        <li>Hover an app & press <kbd>F</kbd> to favorite</li>
+      </ul>
+      <div class="tiny">Tip: open the console (F12) & type hub.rave() for a hidden mode</div>
+    </div>
+
+    <div class="card">
+      <h3>Play Safety</h3>
+      <p class="muted">If GitHub is blocked, use the Try (iframe) button — many school filters still allow internal frames. If the app refuses to load in iframe due to X-Frame-Options, it will open in a new tab instead.</p>
+    </div>
+  </section>
+</main>
+
+<!-- floating iframe preview (hidden by default) -->
+<div id="iframePreview" class="iframe-preview hidden">
+  <div class="iframe-header">
+    <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+    <button id="closeIframe" class="btn tiny">Close</button>
   </div>
-</section>
-
-<main id="app-grid"></main>
-
-<footer>Made with ❤️ — find more surprises by clicking things</footer>
+  <iframe id="appFrame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+</div>
 
 <!-- Achievements Modal -->
-<div id="achievements-modal" class="modal hidden">
-  <div class="modal-content">
-    <h2>Achievements</h2>
-    <div id="achievements-list"></div>
-    <button id="close-achievements">Close</button>
+<div id="achModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <header class="modal-head">
+      <h2>Achievements</h2>
+      <div class="modal-head-right">
+        <div class="exp-big">XP <span id="xpBig">0</span></div>
+        <button id="closeAch" class="btn ghost">Close</button>
+      </div>
+    </header>
+
+    <div id="achList" class="ach-list"></div>
+
+    <footer class="modal-foot">
+      <button id="resetBtn" class="btn danger">Reset Progress</button>
+      <button id="exportBtn" class="btn">Export Save</button>
+      <input type="file" id="importFile" class="hidden" />
+      <button id="importBtn" class="btn ghost">Import Save</button>
+    </footer>
   </div>
 </div>
 
-<script src="apps.json" type="application/json" id="apps-data"></script>
+<!-- Toast container -->
+<div id="toastWrap" class="toast-wrap"></div>
+
 <script src="script.js"></script>
 </body>
 </html>

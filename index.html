@@ -1,110 +1,129 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FNF Hub</title>
-<link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FNF Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#071827">
 </head>
 <body>
-<!-- Background particles + neon gradients -->
-<canvas id="bg-canvas" class="bg-canvas"></canvas>
-
-<header class="topbar">
-  <div class="brand" id="logoWrap" title="Click me a lot for secrets">
-    <img id="logo" src="assets/logo.png" alt="FNF Hub logo">
-    <div class="brand-text">
-      <h1>FNF Hub</h1>
-      <p>All your Friday Night Funkin' web apps</p>
-    </div>
+  <!-- Preloader -->
+  <div id="preloader" class="preloader">
+    <div class="spinner"></div>
+    <div class="pre-txt">FNF HUB — BOOTING</div>
   </div>
 
-  <div class="top-actions">
-    <div class="exp-compact">
-      <div class="lvl">Lvl <span id="level">1</span></div>
-      <div class="exp-bar-compact">
-        <div id="expFill" class="exp-fill"></div>
+  <!-- Background Canvas -->
+  <canvas id="bg-canvas" class="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- Topbar -->
+  <header class="topbar" role="banner">
+    <div class="brand" id="logoWrap" title="Click me 7x for secrets" tabindex="0">
+      <img id="logo" src="assets/logo.png" alt="FNF Hub Logo">
+      <div class="brand-text">
+        <h1>FNF Hub</h1>
+        <p class="muted">All your Friday Night Funkin' web apps</p>
       </div>
-      <div class="exp-count" id="expCount">0 XP</div>
     </div>
 
-    <button class="btn ghost" id="achBtn">Achievements</button>
-    <button class="btn ghost" id="toggleGridBtn">Grid Effects</button>
-    <a class="btn ghost" id="githubBtn" href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
-  </div>
-</header>
-
-<main class="main">
-  <section class="intro">
-    <div class="hero">
-      <h2>Play FNF mods anywhere</h2>
-      <p class="muted">Click Open to launch the web app in a new tab. Use Try (iframe) to attempt running inside school networks.</p>
-    </div>
-  </section>
-
-  <section id="controls" class="controls">
-    <input id="search" placeholder="Search apps..." />
-    <label class="switch">
-      <input id="schoolToggle" type="checkbox">
-      <span class="slider"></span>
-      <span class="switch-label">School Mode (try iframe)</span>
-    </label>
-  </section>
-
-  <section id="grid" class="grid"></section>
-
-  <section class="extras">
-    <div class="card">
-      <h3>Secrets & Easter Eggs</h3>
-      <ul>
-        <li>Click logo 7 times → Legendary Mode</li>
-        <li>Type Konami (↑↑↓↓←→←→BA) → Konami Master</li>
-        <li>Hover an app & press <kbd>F</kbd> to favorite</li>
-      </ul>
-      <div class="tiny">Tip: open the console (F12) & type hub.rave() for a hidden mode</div>
-    </div>
-
-    <div class="card">
-      <h3>Play Safety</h3>
-      <p class="muted">If GitHub is blocked, use the Try (iframe) button — many school filters still allow internal frames. If the app refuses to load in iframe due to X-Frame-Options, it will open in a new tab instead.</p>
-    </div>
-  </section>
-</main>
-
-<!-- floating iframe preview (hidden by default) -->
-<div id="iframePreview" class="iframe-preview hidden">
-  <div class="iframe-header">
-    <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-    <button id="closeIframe" class="btn tiny">Close</button>
-  </div>
-  <iframe id="appFrame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
-</div>
-
-<!-- Achievements Modal -->
-<div id="achModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-card">
-    <header class="modal-head">
-      <h2>Achievements</h2>
-      <div class="modal-head-right">
-        <div class="exp-big">XP <span id="xpBig">0</span></div>
-        <button id="closeAch" class="btn ghost">Close</button>
+    <div class="top-actions" role="navigation" aria-label="Launcher actions">
+      <div class="exp-compact" title="XP & Level">
+        <div class="lvl">Lvl <span id="level">1</span></div>
+        <div class="exp-bar-compact" aria-hidden="true">
+          <div id="expFill" class="exp-fill" style="width:0%"></div>
+        </div>
+        <div class="exp-count" id="expCount">0 XP</div>
       </div>
-    </header>
 
-    <div id="achList" class="ach-list"></div>
+      <button class="btn ghost" id="achBtn" aria-haspopup="dialog">Achievements</button>
+      <button class="btn ghost" id="toggleGridBtn">Grid FX</button>
+      <a class="btn ghost" id="githubBtn" href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </header>
 
-    <footer class="modal-foot">
-      <button id="resetBtn" class="btn danger">Reset Progress</button>
-      <button id="exportBtn" class="btn">Export Save</button>
-      <input type="file" id="importFile" class="hidden" />
-      <button id="importBtn" class="btn ghost">Import Save</button>
-    </footer>
+  <!-- Main -->
+  <main class="main" id="main" role="main">
+    <section class="intro">
+      <div class="hero">
+        <h2>Play FNF mods anywhere — quick launch</h2>
+        <p class="muted">Open will attempt a new tab. Try (iframe) will attempt to embed inside this page (useful for school networks). If iframe is blocked, you'll be offered the open-in-new-tab fallback.</p>
+      </div>
+    </section>
+
+    <section id="controls" class="controls" aria-label="Controls">
+      <input id="search" placeholder="Search apps..." aria-label="Search apps" />
+      <label class="switch" title="School Mode (Try iframe first)">
+        <input id="schoolToggle" type="checkbox" />
+        <span class="slider"></span>
+        <span class="switch-label">School Mode</span>
+      </label>
+      <button class="btn small" id="refreshApps">Refresh Apps</button>
+    </section>
+
+    <section id="grid" class="grid" aria-live="polite"></section>
+
+    <section class="extras">
+      <div class="card">
+        <h3>Secrets & Easter Eggs</h3>
+        <ul>
+          <li>Click logo 7 times → Legendary Mode</li>
+          <li>Type Konami (↑↑↓↓←→←→BA) → Konami Master</li>
+          <li>Hover app & press <kbd>F</kbd> to favorite</li>
+          <li>Open console and run <code>hub.rave()</code> for rave mode</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Play Safety</h3>
+        <p class="muted">If GitHub or external hosting is blocked, use Try (iframe). If the app refuses to load in an iframe (X-Frame-Options), you'll see a fallback banner with Open in new tab. Works locally and on GitHub Pages.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- iframe preview -->
+  <div id="iframePreview" class="iframe-preview hidden" role="dialog" aria-hidden="true">
+    <div class="iframe-header">
+      <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+      <div class="iframe-title" id="iframeTitle">Preview</div>
+      <div style="flex:1"></div>
+      <button id="openInTab" class="btn tiny">Open in new tab</button>
+      <button id="closeIframe" class="btn tiny ghost">Close</button>
+    </div>
+    <iframe id="appFrame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms" title="App preview"></iframe>
+    <div id="iframeBanner" class="iframe-banner hidden">This app refused to embed (X-Frame-Options). Open in a new tab instead.</div>
   </div>
-</div>
 
-<!-- Toast container -->
-<div id="toastWrap" class="toast-wrap"></div>
+  <!-- Achievements Modal -->
+  <div id="achModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="achTitle">
+    <div class="modal-card">
+      <header class="modal-head">
+        <h2 id="achTitle">Achievements</h2>
+        <div class="modal-head-right">
+          <div class="exp-big">XP <span id="xpBig">0</span></div>
+          <button id="closeAch" class="btn ghost">Close</button>
+        </div>
+      </header>
 
-<script src="script.js"></script>
+      <div id="achList" class="ach-list" role="list"></div>
+
+      <footer class="modal-foot">
+        <button id="resetBtn" class="btn danger">Reset Progress</button>
+        <button id="exportBtn" class="btn">Export Save</button>
+        <input type="file" id="importFile" class="hidden" accept="application/json" />
+        <button id="importBtn" class="btn ghost">Import Save</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div id="toastWrap" class="toast-wrap" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="script.js" defer></script>
+  <script>
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('sw.js').catch(()=>{/*fail silently*/});
+    }
+  </script>
 </body>
 </html>

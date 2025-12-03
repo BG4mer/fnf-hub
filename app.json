@@ -1,0 +1,6 @@
+[
+  {"id":"fnf-web-player","title":"FNF Web Player","desc":"Play FNF mods online","img":"assets/game1.png","url":"https://yourgithub.io/fnf-web-player"},
+  {"id":"chart-editor","title":"Chart Editor","desc":"Make custom charts","img":"assets/game2.png","url":"https://yourgithub.io/chart-editor"},
+  {"id":"anim-studio","title":"Anim Studio","desc":"Animate characters","img":"assets/game3.png","url":"https://yourgithub.io/anim-studio"},
+  {"id":"skin-creator","title":"Skin Creator","desc":"Design skins","img":"assets/game4.png","url":"https://yourgithub.io/skin-creator"}
+]

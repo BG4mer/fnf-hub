@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FNF Hub — Legendary Launcher</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="bg-animation"></div>
+
+<header>
+  <img id="logo" src="assets/logo.png" alt="FNF Hub Logo">
+  <div class="header-text">
+    <h1>FNF Hub</h1>
+    <p>All your Friday Night Funkin' web apps in one legendary launcher</p>
+  </div>
+  <div class="header-actions">
+    <button id="achievements-btn">Achievements</button>
+    <a href="https://github.com/yourusername" target="_blank" id="github-btn">GitHub</a>
+  </div>
+</header>
+
+<section class="exp-bar-section">
+  <div>Level: <span id="level">1</span></div>
+  <div class="exp-bar">
+    <div id="exp-fill"></div>
+  </div>
+</section>
+
+<main id="app-grid"></main>
+
+<footer>Made with ❤️ — find more surprises by clicking things</footer>
+
+<!-- Achievements Modal -->
+<div id="achievements-modal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Achievements</h2>
+    <div id="achievements-list"></div>
+    <button id="close-achievements">Close</button>
+  </div>
+</div>
+
+<script src="apps.json" type="application/json" id="apps-data"></script>
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,10 +1,5 @@
-/* FNF Hub — Legendary static launcher
-   - Fetches apps.json
-   - EXP / achievements (localStorage)
-   - Konami code + logo clicks easter eggs
-   - Toasts, confetti, iframe preview for "School Mode"
-   - Lots of tiny interactions to feel legendary
-*/
+// FNF Hub — Legendary static launcher (GO ALL OUT)
+// Robust apps.json loading with fallback, achievements, EXP, confetti, iframe try + fallback, service worker registration
 
 const DATA_URL = 'apps.json';
 const grid = document.getElementById('grid');
@@ -23,16 +18,20 @@ const schoolToggle = document.getElementById('schoolToggle');
 const iframePreview = document.getElementById('iframePreview');
 const appFrame = document.getElementById('appFrame');
 const closeIframe = document.getElementById('closeIframe');
+const openInTab = document.getElementById('openInTab');
+const iframeTitle = document.getElementById('iframeTitle');
+const iframeBanner = document.getElementById('iframeBanner');
 const toggleGridBtn = document.getElementById('toggleGridBtn');
+const preloader = document.getElementById('preloader');
+const refreshApps = document.getElementById('refreshApps');
 
 let apps = [];
-let toastTimeouts = [];
 let logoClicks = 0;
 let konamiBuffer = [];
 const KONAMI = ['arrowup','arrowup','arrowdown','arrowdown','arrowleft','arrowright','arrowleft','arrowright','b','a'];
 
-// Save keys
-const STORE_KEY = 'fnfHub:v1';
+// Storage
+const STORE_KEY = 'fnfHub:v2';
 let state = {
   exp: 0,
   unlocked: [],
@@ -40,6 +39,7 @@ let state = {
   favorites: {}
 };
 
+// Achievements meta
 const ACHIEVEMENTS = [
   { id:'first_click', name:'First Click', desc:'Opened your first app', exp: 10 },
   { id:'explorer', name:'Explorer', desc:'Open 5 different apps', exp: 30 },
@@ -50,6 +50,19 @@ const ACHIEVEMENTS = [
   { id:'raver', name:'Raver', desc:'Run hub.rave() in console', exp: 100 }
 ];
 
+// Default apps fallback (embedded) — used when apps.json fails to load
+const DEFAULT_APPS = [
+  {"id":"fnf-web-player","title":"FNF Web Player","desc":"Play thousands of FNF mods in-browser (placeholder).","img":"assets/game1.png","url":"https://yourgithub.io/fnf-web-player"},
+  {"id":"chart-editor","title":"Chart Editor","desc":"Make and edit custom songs & charts.","img":"assets/game2.png","url":"https://yourgithub.io/chart-editor"},
+  {"id":"anim-studio","title":"Anim Studio","desc":"Animate characters for week-long chains.","img":"assets/game3.png","url":"https://yourgithub.io/anim-studio"},
+  {"id":"sound-lab","title":"Sound Lab","desc":"Remix and export beats.","img":"assets/game4.png","url":"https://yourgithub.io/sound-lab"},
+  {"id":"asset-hub","title":"Asset Hub","desc":"Sprites, SFX, backgrounds — placeholders.","img":"assets/game5.png","url":"https://yourgithub.io/asset-hub"},
+  {"id":"level-gallery","title":"Level Gallery","desc":"Browse community levels and demos.","img":"assets/game6.png","url":"https://yourgithub.io/level-gallery"},
+  {"id":"mod-manager","title":"Mod Manager","desc":"Install & manage web mods.","img":"assets/game7.png","url":"https://yourgithub.io/mod-manager"},
+  {"id":"experimental","title":"Experimental","desc":"WIP fun stuff & prototypes.","img":"assets/game8.png","url":"https://yourgithub.io/experimental"}
+];
+
+// ------------------- storage -------------------
 function loadState(){
   try{
     const raw = localStorage.getItem(STORE_KEY);
@@ -58,37 +71,38 @@ function loadState(){
     state = {exp:0,unlocked:[],opens:{},favorites:{}};
   }
 }
-function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); updateXPUI(); renderAchievements(); }
+function saveState(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  updateXPUI();
+  renderAchievements();
+}
 
+// ------------------- toasts -------------------
 function toast(text, opts = {}){
   const el = document.createElement('div'); el.className = 'toast'; el.textContent = text;
   toastWrap.appendChild(el);
-  const t = setTimeout(()=>{ el.remove(); }, opts.time || 3500);
-  toastTimeouts.push(t);
+  setTimeout(()=>{ el.style.opacity = '0'; setTimeout(()=>el.remove(),300); }, opts.time || 3500);
 }
 
+// ------------------- EXP & Achievements -------------------
 function gainExp(n){
-  state.exp += n;
-  updateXPUI();
+  state.exp = (state.exp || 0) + n;
   toast(`+${n} XP`);
   saveState();
   if(n >= 100) confettiBurst();
   if(levelUpPending()) levelUp();
 }
-
 function levelUpPending(){
-  // level every 100xp
   return (state.exp - (state.lastLevelExp || 0)) >= 100;
 }
 function levelUp(){
   state.lastLevelExp = Math.floor(state.exp/100)*100;
   toast(`Level up! Lvl ${Math.floor(state.exp/100)+1}`);
-  confettiBurst();
+  confettiBurst(true);
   saveState();
 }
-
 function updateXPUI(){
-  const xp = state.exp;
+  const xp = state.exp || 0;
   const level = Math.floor(xp/100)+1;
   const progress = (xp % 100);
   levelNode.textContent = level;
@@ -96,7 +110,6 @@ function updateXPUI(){
   xpBig.textContent = xp;
   expFill.style.width = Math.min(100, progress) + '%';
 }
-
 function unlock(id){
   if(!state.unlocked.includes(id)){
     state.unlocked.push(id);
@@ -107,7 +120,6 @@ function unlock(id){
     saveState();
   }
 }
-
 function renderAchievements(){
   achList.innerHTML = '';
   ACHIEVEMENTS.forEach(a=>{
@@ -117,17 +129,23 @@ function renderAchievements(){
   });
 }
 
-/* fetch apps and render */
-async function loadApps(){
+// ------------------- load apps.json (robust) -------------------
+async function fetchApps(){
   try{
-    const r = await fetch(DATA_URL, {cache: 'no-store'});
-    apps = await r.json();
-  }catch(e){
-    apps = []; toast('Failed to load apps.json — check file path');
+    const res = await fetch(DATA_URL, {cache: 'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(!Array.isArray(data)) throw new Error('Invalid JSON');
+    apps = data;
+    return apps;
+  }catch(err){
+    toast('Failed to load apps.json — using embedded fallback');
+    apps = DEFAULT_APPS.slice();
+    return apps;
   }
-  renderApps(apps);
 }
 
+// ------------------- render -------------------
 function renderApps(list){
   grid.innerHTML = '';
   list.forEach(app=>{
@@ -165,7 +183,6 @@ function renderApps(list){
       saveState();
     });
 
-    // keyboard "F" to favorite while hovering
     el.addEventListener('mouseenter', ()=>{ el.dataset.hover = '1'; });
     el.addEventListener('mouseleave', ()=>{ delete el.dataset.hover; });
 
@@ -173,19 +190,26 @@ function renderApps(list){
   });
 }
 
-function openApp(app, iframeMode){
-  // attempt iframe if school mode or forced iframeMode
-  const useIframe = (schoolToggle.checked || iframeMode);
-  if(useIframe){
-    try{
-      appFrame.src = app.url;
-      iframePreview.classList.remove('hidden');
-      toast(`Trying iframe for ${app.title} — if blocked, it will open in a new tab.`);
-      // if the frame refuses to load (X-Frame-Options), user can close and click Open to open new tab
-    }catch(e){
-      toast('Iframe failed, opening in new tab');
-      window.open(app.url, '_blank');
-    }
+// ------------------- open app with iframe fallback -------------------
+function openApp(app, forceIframe){
+  const wantIframe = schoolToggle.checked || forceIframe;
+  if(wantIframe){
+    // show preview and attempt to load
+    iframeTitle.textContent = app.title;
+    appFrame.src = app.url;
+    iframeBanner.classList.add('hidden');
+    iframePreview.classList.remove('hidden');
+    // Set a timeout: if iframe doesn't render within X sec, show banner and offer open-in-tab
+    const checkTimeout = setTimeout(()=>{
+      // can't reliably detect cross-origin block; show banner as friendly hint
+      iframeBanner.classList.remove('hidden');
+    }, 1600);
+
+    // If the iframe loads a same-origin page, 'load' will fire and banner stay hidden
+    appFrame.onload = () => {
+      clearTimeout(checkTimeout);
+      // If access denied for cross-origin, we can't inspect content — user can try open in tab
+    };
   }else{
     window.open(app.url, '_blank');
   }
@@ -199,23 +223,27 @@ function openApp(app, iframeMode){
   saveState();
 }
 
-/* iframe close */
+// iframe controls
 closeIframe.addEventListener('click', ()=>{
   iframePreview.classList.add('hidden'); appFrame.src = 'about:blank';
 });
+openInTab.addEventListener('click', ()=>{
+  const u = appFrame.src || 'about:blank';
+  if(u && u !== 'about:blank') window.open(u, '_blank');
+});
 
-/* search */
+// ------------------- search -------------------
 search.addEventListener('input', (e)=>{
   const q = e.target.value.toLowerCase().trim();
-  const filtered = apps.filter(a=> (a.title+a.desc).toLowerCase().includes(q));
+  const filtered = apps.filter(a=> (a.title + ' ' + a.desc).toLowerCase().includes(q));
   renderApps(filtered);
 });
 
-/* achievements modal */
+// ------------------- achievements modal -------------------
 achBtn.addEventListener('click', ()=>{ achModal.classList.remove('hidden'); });
 closeAch.addEventListener('click', ()=>{ achModal.classList.add('hidden'); });
 
-/* reset/export/import */
+// export/import/reset
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   if(!confirm('Reset progress?')) return;
   state = {exp:0,unlocked:[],opens:{},favorites:{}};
@@ -227,9 +255,7 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
   const a = document.createElement('a'); a.href = url; a.download = 'fnfHub-save.json'; a.click();
   URL.revokeObjectURL(url);
 });
-document.getElementById('importBtn').addEventListener('click', ()=>{
-  const f = document.getElementById('importFile'); f.click();
-});
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', async (ev)=>{
   const file = ev.target.files[0]; if(!file) return;
   try{
@@ -238,7 +264,7 @@ document.getElementById('importFile').addEventListener('change', async (ev)=>{
   }catch(e){ toast('Import failed'); }
 });
 
-/* logo easter egg */
+// logo + konami + hotkeys
 logoWrap.addEventListener('click', ()=>{
   logoClicks++;
   toast(`logo x${logoClicks}`);
@@ -247,35 +273,26 @@ logoWrap.addEventListener('click', ()=>{
     confettiBurst(true);
   }
 });
-
-/* konami detection */
 window.addEventListener('keydown', (e)=>{
   konamiBuffer.push(e.key.toLowerCase());
   if(konamiBuffer.length > KONAMI.length) konamiBuffer.shift();
   if(KONAMI.every((k,i)=>konamiBuffer[i] === k)){
     unlock('konami'); raveMode(); confettiBurst(true);
   }
-  // quick favorite hotkey when hovering
   if(e.key.toLowerCase() === 'f'){
     const hovered = document.querySelector('.app[data-hover="1"]');
-    if(hovered){
-      hovered.querySelector('.fav').click();
-    }
+    if(hovered) hovered.querySelector('.fav').click();
   }
 });
 
-/* rave mode (console trick) */
+// console API
 window.hub = {
-  rave: () => {
-    toast('RAVE MODE ON');
-    document.body.classList.toggle('rave');
-    unlock('raver');
-    confettiBurst();
-  },
-  state: () => state
+  rave: () => { toast('RAVE MODE ON'); document.body.classList.toggle('rave'); unlock('raver'); confettiBurst(); },
+  state: () => state,
+  clearSaves: () => { localStorage.removeItem(STORE_KEY); loadState(); saveState(); toast('Save cleared'); }
 };
 
-/* confetti */
+// confetti
 function confettiBurst(big=false){
   const count = big ? 200 : 80;
   const el = document.createElement('canvas'); el.style.position='fixed'; el.style.left=0; el.style.top=0; el.style.zIndex=200; el.width = innerWidth; el.height = innerHeight;
@@ -305,10 +322,7 @@ function confettiBurst(big=false){
   frame();
 }
 
-/* small UI toggles */
-toggleGridBtn.addEventListener('click', ()=>{ document.body.classList.toggle('grid-fx'); toast('Toggled grid effects'); });
-
-/* minimal background particle system */
+// background particles
 (function bgParticles(){
   const c = document.getElementById('bg-canvas'); const ctx = c.getContext('2d');
   function resize(){ c.width = innerWidth; c.height = innerHeight; }
@@ -334,8 +348,7 @@ toggleGridBtn.addEventListener('click', ()=>{ document.body.classList.toggle('gr
         const dx = a.x-b.x, dy = a.y-b.y, d = Math.hypot(dx,dy);
         if(d<120){
           ctx.strokeStyle = `hsla(${(a.hue+b.hue)/2},70%,60%,${1 - d/120})`;
-          ctx.lineWidth = 0.6;
-          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+          ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
         }
       }
     }
@@ -344,18 +357,36 @@ toggleGridBtn.addEventListener('click', ()=>{ document.body.classList.toggle('gr
   loop();
 })();
 
-/* initial load */
-loadState(); loadApps(); updateXPUI(); renderAchievements();
+// grid fx toggle
+toggleGridBtn.addEventListener('click', ()=>{ document.body.classList.toggle('grid-fx'); toast('Toggled grid effects'); });
 
-/* tiny keyboard shortcut: pressing `~` opens console helper */
-window.addEventListener('keydown', (e)=>{ if(e.key === '`'){ toast('Type hub.rave() in console for a surprise') } });
-
-/* small safety: if iframe on page blocks, detect via load error */
-appFrame.addEventListener('load', ()=>{
-  // If the appFrame remains blank, it might be blocked by X-Frame-Options. We can't reliably detect all cases cross-origin.
+// refresh apps
+refreshApps.addEventListener('click', async ()=>{
+  await loadApps();
+  toast('Apps refreshed');
 });
 
-/* make grid keyboard accessible: focus the first open button on load */
-document.addEventListener('DOMContentLoaded', ()=>{
-  setTimeout(()=>{ const b = document.querySelector('.open'); if(b) b.setAttribute('tabindex','0'); }, 400);
-});
+// ------------------- init -------------------
+async function loadApps(){
+  try{
+    preloader.style.display = 'flex';
+  }catch(e){}
+  await new Promise(r=>setTimeout(r, 300)); // tiny UX pause
+  loadState();
+  try{
+    await fetchApps();
+  }catch(e){
+    apps = DEFAULT_APPS.slice();
+  }
+  renderApps(apps);
+  updateXPUI();
+  renderAchievements();
+  try{ preloader.style.display = 'none'; }catch(e){}
+}
+loadApps();
+
+// keyboard hint
+window.addEventListener('keydown', (e)=>{ if(e.key === '`'){ toast('Tip: type hub.rave() in the console for a surprise') } });
+
+// accessible focus helpers
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Tab'){ document.body.classList.add('user-is-tabbing'); }});

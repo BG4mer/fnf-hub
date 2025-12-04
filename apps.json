@@ -1,4 +1,5 @@
 [
-  {"id":"fnf-mrmeowzz","title":"FNF MrMeowzz's Edition","desc":"Play FNF MrMeowzz's Edition","img":"assets/game1.png","url":"https://mrmeowzz.github.io/Funkin-MrMeowzz/web/"},
+  {"id":"fnf-mrmeowzz","title":"FNF: MrMeowzz's Edition","desc":"Play FNF MrMeowzz's Edition","img":"assets/game1.png","url":"https://mrmeowzz.github.io/Funkin-MrMeowzz/web/"},
+  {"id":"fnf-neo","title":"FNF: Neo","desc":"FNF: Neo","img":"assets/game3.png","url":"https://mr-funkinguy.github.io/FNF-NEO-HTML5-BY-ME/"},
   {"id":"psychengine051","title":"FNF: Psych Engine 0.5.1","desc":"FNF: Psych Engine 0.5.1","img":"assets/game2.png","url":"https://sushi8756.github.io/FnF-Psych-Engine-0.5.1-HTML/"}
 ]

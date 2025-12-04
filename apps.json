@@ -1,4 +1,4 @@
 [
-  {"id":"fnf-web-player","title":"FNF MrMeowzz's Edition","desc":"Play FNF MrMeowzz's Edition","img":"assets/game1.png","url":"https://mrmeowzz.github.io/Funkin-MrMeowzz/web/"},
-  {"id":"chart-editor","title":"FNF: Psych Engine 0.5.1","desc":"FNF: Psych Engine 0.5.1","img":"assets/game2.png","url":"https://sushi8756.github.io/FnF-Psych-Engine-0.5.1-HTML/"},
+  {"id":"fnf-mrmeowzz","title":"FNF MrMeowzz's Edition","desc":"Play FNF MrMeowzz's Edition","img":"assets/game1.png","url":"https://mrmeowzz.github.io/Funkin-MrMeowzz/web/"},
+  {"id":"psychengine051","title":"FNF: Psych Engine 0.5.1","desc":"FNF: Psych Engine 0.5.1","img":"assets/game2.png","url":"https://sushi8756.github.io/FnF-Psych-Engine-0.5.1-HTML/"},
 ]
